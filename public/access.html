@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#121214" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="application-name" content="TakeTime" />
+    <title>进入药时</title>
+    <link rel="icon" href="/assets/taketime-mark.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="/assets/taketime-slogan-serif.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="access-page">
+    <!--
+      THESIS: A quiet threshold protects the daily instrument without becoming a second product.
+      OWN-WORLD: Morning-gray canvas, one night-glass tool, action blue, compact 8px geometry.
+      STORY: Recognize 药时, enter the private phrase, continue directly into today's schedule.
+      FIRST VIEWPORT: Brand bar above one centered verification form; the action is immediately visible.
+      FORM: An established-world Operate extension, shaped directly from the precise access request.
+    -->
+    <header class="access-header">
+      <div class="access-header-inner" aria-label="药时">
+        <span class="access-brand-mark" aria-hidden="true">药</span>
+        <span class="access-brand-tagline">服药有时，养正无恙</span>
+      </div>
+    </header>
+
+    <main class="access-main">
+      <section class="access-panel" aria-labelledby="accessTitle">
+        <div class="access-panel-heading">
+          <p class="access-kicker" id="accessKicker">私人访问</p>
+          <h1 id="accessTitle">进入药时</h1>
+        </div>
+
+        <form class="access-form" id="accessForm" novalidate>
+          <label class="access-field" for="accessPhrase">
+            <span>访问口令</span>
+          </label>
+          <div class="access-input-wrap">
+            <input
+              id="accessPhrase"
+              name="phrase"
+              type="password"
+              inputmode="text"
+              autocomplete="current-password"
+              enterkeyhint="go"
+              maxlength="200"
+              aria-describedby="accessError"
+              required
+            />
+            <button
+              class="access-reveal-button"
+              id="accessRevealButton"
+              type="button"
+              aria-controls="accessPhrase"
+              aria-label="显示访问口令"
+              aria-pressed="false"
+            >显示</button>
+          </div>
+          <p class="access-error" id="accessError" role="alert"></p>
+          <button class="access-submit" id="accessSubmit" type="submit">
+            <span id="accessSubmitLabel">进入药时</span>
+          </button>
+          <span class="sr-only" id="accessStatus" role="status" aria-atomic="true"></span>
+        </form>
+      </section>
+    </main>
+
+    <script src="/access.js" defer></script>
+  </body>
+</html>

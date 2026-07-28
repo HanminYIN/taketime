@@ -1,0 +1,17 @@
+{
+  "name": "taketime",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:python && npm run test:e2e",
+    "test:python": "python3 -W error::ResourceWarning -m unittest discover -s tests -v",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

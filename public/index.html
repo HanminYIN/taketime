@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="个人每日用药记录与动态提醒" />
+    <meta name="application-name" content="TakeTime" />
+    <title>药时 · 每日用药记录</title>
+    <link rel="icon" href="/assets/taketime-mark.svg" type="image/svg+xml" />
+    <link
+      rel="preload"
+      href="/assets/taketime-slogan-serif.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <nav class="top-nav" aria-label="主要导航">
+        <button class="brand-button" type="button" data-view-target="today" aria-label="返回今日用药">
+          <span class="brand-mark-entry" aria-hidden="true">
+            <span class="brand-mark">药</span>
+          </span>
+          <span class="brand-tagline">服药有时，养正无恙</span>
+        </button>
+        <div class="nav-tabs" role="tablist" aria-label="应用视图">
+          <button class="nav-tab is-active" id="todayTab" type="button" role="tab" aria-selected="true" aria-controls="todayView" tabindex="0" data-view-target="today">今日</button>
+          <button class="nav-tab" id="historyTab" type="button" role="tab" aria-selected="false" aria-controls="historyView" tabindex="-1" data-view-target="history">记录</button>
+          <button class="nav-tab" id="planTab" type="button" role="tab" aria-selected="false" aria-controls="planView" tabindex="-1" data-view-target="plan">计划</button>
+          <span class="nav-indicator" aria-hidden="true"></span>
+        </div>
+        <div class="nav-utilities">
+          <span class="sync-state is-saved" id="syncState" role="status" aria-live="polite" aria-atomic="true">
+            <span class="sync-state-dot" aria-hidden="true"></span>
+            <span id="syncStateLabel">已保存</span>
+          </span>
+          <button class="nav-lock-button" id="lockAccessButton" type="button" aria-hidden="true" tabindex="-1">锁定</button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="app-view is-active" id="todayView" role="tabpanel" data-view="today" aria-labelledby="todayTab">
+        <div class="page-shell">
+          <div class="page-heading today-heading">
+            <div class="date-heading-copy">
+              <p class="date-label" id="todayDateLabel"></p>
+              <h1 id="todayTitle">今天的用药</h1>
+            </div>
+            <div class="date-controls">
+              <div class="date-switcher" aria-label="切换日期">
+                <button class="icon-button" id="previousDayButton" type="button" aria-label="前一天" title="前一天">‹</button>
+                <time class="selected-date" id="selectedDateDisplay" datetime="">今天</time>
+                <button class="icon-button" id="nextDayButton" type="button" aria-label="后一天" title="后一天">›</button>
+              </div>
+              <button
+                class="text-button return-today-button is-placeholder"
+                id="returnTodayButton"
+                type="button"
+                aria-hidden="true"
+                tabindex="-1"
+              >回到今天</button>
+            </div>
+            <p class="sr-only" id="dateNavigationAnnouncement" role="status" aria-live="polite" aria-atomic="true"></p>
+          </div>
+
+          <div class="day-content" id="dayContent">
+            <section class="focus-panel" id="focusPanel" aria-labelledby="nextPanelTitle">
+              <p class="sr-only" id="focusStatusAnnouncement" role="status" aria-live="polite" aria-atomic="true"></p>
+              <div class="focus-heading">
+                <div class="focus-copy">
+                  <p class="panel-kicker" id="currentTimeLabel">现在</p>
+                  <h2 id="nextPanelTitle">正在读取今日计划</h2>
+                  <p class="next-detail" id="nextPanelDetail">请稍候</p>
+                </div>
+                <div class="next-summary">
+                  <span class="summary-number" id="completedCount">0</span>
+                  <span class="summary-total" id="totalCount">/ 0 项</span>
+                  <span class="summary-label" id="summaryLabel">今日完成</span>
+                </div>
+              </div>
+              <div class="focus-action-list" id="focusMedicationList"></div>
+              <div class="intake-feedback-list" id="intakeFeedbackList"></div>
+              <button class="wake-button" id="wakeButton" type="button">我起床了</button>
+              <div class="wake-confirmation" id="wakeConfirmation" hidden>
+                <span id="wakeRecordedLabel"></span>
+                <button class="glass-link" id="adjustScheduleButton" type="button">调整安排</button>
+              </div>
+              <div
+                class="progress-track"
+                id="dayProgress"
+                role="progressbar"
+                aria-label="今日用药完成进度"
+                aria-valuemin="0"
+                aria-valuemax="0"
+                aria-valuenow="0"
+              ><span id="dayProgressBar"></span></div>
+            </section>
+
+            <section class="context-section" aria-labelledby="contextTitle">
+              <details class="context-details" id="contextDetails">
+                <summary>
+                  <div>
+                    <p class="section-kicker" id="contextSourceLabel">今日安排</p>
+                    <h2 id="contextTitle">预计时间</h2>
+                  </div>
+                  <span class="details-action">调整</span>
+                </summary>
+                <div class="details-content">
+                  <div class="details-content-inner">
+                    <p class="context-note" id="contextInferenceNote">预计时间仅用于安排提醒，实际用餐变化时请及时调整。</p>
+                    <form class="time-grid" id="contextForm">
+                      <label class="time-field">
+                        <span class="time-field-heading">起床 <small class="day-offset-badge" data-day-offset-field="wakeTime">今日</small></span>
+                        <input type="time" name="wakeTime" required />
+                      </label>
+                      <label class="time-field">
+                        <span class="time-field-heading">早餐 <small class="day-offset-badge" data-day-offset-field="breakfastTime">今日</small></span>
+                        <input type="time" name="breakfastTime" required />
+                      </label>
+                      <label class="time-field">
+                        <span class="time-field-heading">午餐 <small class="day-offset-badge" data-day-offset-field="lunchTime">今日</small></span>
+                        <input type="time" name="lunchTime" required />
+                      </label>
+                      <label class="time-field">
+                        <span class="time-field-heading">晚餐 <small class="day-offset-badge" data-day-offset-field="dinnerTime">今日</small></span>
+                        <input type="time" name="dinnerTime" required />
+                      </label>
+                      <label class="time-field">
+                        <span class="time-field-heading">睡前 <small class="day-offset-badge" data-day-offset-field="bedtimeTime">今日</small></span>
+                        <input type="time" name="bedtimeTime" required />
+                      </label>
+                    </form>
+                    <div class="cross-day-notice" aria-hidden="true">
+                      <div class="cross-day-notice-inner">
+                        <p class="cross-day-warning" id="contextCrossDayWarning" role="status" aria-live="polite"></p>
+                      </div>
+                    </div>
+                    <div class="context-actions">
+                      <button class="primary-button" id="saveContextButton" type="button">保存时间</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </section>
+
+            <details class="timeline-section timeline-details" id="timelineDetails">
+              <summary class="section-heading-row">
+                <div>
+                  <p class="section-kicker">完整计划与记录</p>
+                  <h2 id="timelineTitle">每日总结</h2>
+                </div>
+                <span class="section-count" id="pendingCount">0 项待记录</span>
+              </summary>
+              <div class="details-content">
+                <div class="details-content-inner timeline-content-inner">
+                  <div class="timeline" id="timeline"></div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="app-view" id="historyView" role="tabpanel" data-view="history" aria-labelledby="historyTab" hidden>
+        <div class="page-shell">
+          <div class="page-heading">
+            <div>
+              <p class="date-label">最近 7 天</p>
+              <h1 id="historyTitle">用药记录</h1>
+            </div>
+          </div>
+
+          <section class="history-overview" aria-label="七日完成概况">
+            <picture class="history-picture">
+              <source
+                type="image/avif"
+                srcset="
+                  /assets/pill-organizer-480.avif 480w,
+                  /assets/pill-organizer-800.avif 800w,
+                  /assets/pill-organizer-1400.avif 1400w
+                "
+                sizes="(max-width: 420px) calc(100vw - 24px), (max-width: 760px) min(36vw, 230px), min(38vw, 395px)"
+              />
+              <img
+                class="history-image"
+                src="/assets/pill-organizer-800.jpg"
+                srcset="
+                  /assets/pill-organizer-480.jpg 480w,
+                  /assets/pill-organizer-800.jpg 800w,
+                  /assets/pill-organizer-1400.jpg 1400w
+                "
+                sizes="(max-width: 420px) calc(100vw - 24px), (max-width: 760px) min(36vw, 230px), min(38vw, 395px)"
+                width="1400"
+                height="933"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="low"
+                alt="每周药盒与药片"
+              />
+            </picture>
+            <div class="history-metrics">
+              <div>
+                <p class="panel-kicker">已记录剂次</p>
+                <p class="history-total"><span id="historyCompleted">0</span><span id="historyTotal"> / —</span></p>
+              </div>
+              <div class="history-rate">
+                <span id="historyPercent">—</span>
+                <small id="historyRateLabel">完成率</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="history-section" aria-labelledby="weeklyTitle">
+            <div class="section-heading-row">
+              <div>
+                <p class="section-kicker">每日明细</p>
+                <h2 id="weeklyTitle">七日趋势</h2>
+              </div>
+            </div>
+            <div class="history-list" id="historyList" role="list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="app-view" id="planView" role="tabpanel" data-view="plan" aria-labelledby="planTab" hidden>
+        <div class="page-shell">
+          <div class="page-heading plan-heading">
+            <div>
+              <p class="date-label">默认方案</p>
+              <h1 id="planTitle">用药计划</h1>
+            </div>
+            <button class="primary-button" id="addMedicationButton" type="button"><span aria-hidden="true">＋</span> 添加药物</button>
+          </div>
+
+          <section class="preferences-section" aria-labelledby="preferencesTitle">
+            <div class="section-heading-row">
+              <div>
+                <p class="section-kicker">新日期默认采用</p>
+                <h2 id="preferencesTitle">常用作息</h2>
+              </div>
+              <button class="secondary-button" id="savePreferencesButton" type="button">保存默认时间</button>
+            </div>
+            <form class="time-grid" id="preferencesForm">
+              <label class="time-field"><span class="time-field-heading">起床 <small class="day-offset-badge" data-day-offset-field="wakeTime">当日</small></span><input type="time" name="wakeTime" required /></label>
+              <label class="time-field"><span class="time-field-heading">早餐 <small class="day-offset-badge" data-day-offset-field="breakfastTime">当日</small></span><input type="time" name="breakfastTime" required /></label>
+              <label class="time-field"><span class="time-field-heading">午餐 <small class="day-offset-badge" data-day-offset-field="lunchTime">当日</small></span><input type="time" name="lunchTime" required /></label>
+              <label class="time-field"><span class="time-field-heading">晚餐 <small class="day-offset-badge" data-day-offset-field="dinnerTime">当日</small></span><input type="time" name="dinnerTime" required /></label>
+              <label class="time-field"><span class="time-field-heading">睡前 <small class="day-offset-badge" data-day-offset-field="bedtimeTime">当日</small></span><input type="time" name="bedtimeTime" required /></label>
+            </form>
+            <div class="cross-day-notice" aria-hidden="true">
+              <div class="cross-day-notice-inner">
+                <p class="cross-day-warning preferences-cross-day-warning" id="preferencesCrossDayWarning" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="plan-section" aria-labelledby="medicationListTitle">
+            <div class="section-heading-row">
+              <div>
+                <p class="section-kicker">当前生效</p>
+                <h2 id="medicationListTitle">每日用药安排</h2>
+              </div>
+              <span class="section-count plan-count" id="planCount">
+                <span id="planMedicationCount">0 种药</span>
+                <span id="planAdministrationCount">每日 0 次安排</span>
+              </span>
+            </div>
+            <ul class="plan-list" id="planList" aria-label="当前生效的用药安排"></ul>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="mobile-brand-footer">
+      <p class="mobile-brand-tagline">服药有时，养正无恙</p>
+    </footer>
+
+    <dialog class="medication-dialog medication-editor-dialog" id="medicationDialog" aria-labelledby="medicationDialogTitle">
+      <form method="dialog" id="medicationForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-kicker">药物与每日安排</p>
+            <h2 id="medicationDialogTitle" tabindex="-1">添加药物</h2>
+          </div>
+          <button class="icon-button light-icon-button" id="closeMedicationDialog" type="button" aria-label="关闭" title="关闭">×</button>
+        </div>
+        <input type="hidden" name="id" />
+        <input type="hidden" name="revision" />
+        <div class="medication-dialog-scroll">
+          <label class="form-field">
+            <span>药品名称</span>
+            <input
+              type="text"
+              name="name"
+              dir="auto"
+              data-code-point-max="80"
+              data-field-label="药品名称"
+              aria-errormessage="medicationDialogErrorMessage"
+              required
+            />
+          </label>
+
+          <fieldset class="timing-mode-setting" aria-describedby="timingModeDescription">
+            <legend id="timingModeTitle">时间跟随方式</legend>
+            <p id="timingModeDescription">选择下一次时间主要跟着什么变化。</p>
+            <div class="timing-mode-options">
+              <label class="timing-mode-option">
+                <input type="radio" name="timingMode" value="routine" checked />
+                <span class="timing-mode-control">
+                  <strong>跟随作息</strong>
+                  <small>根据起床或睡前时间安排</small>
+                </span>
+              </label>
+              <label class="timing-mode-option">
+                <input type="radio" name="timingMode" value="meal" />
+                <span class="timing-mode-control">
+                  <strong>跟随用餐</strong>
+                  <small>每一剂独立跟随早餐、午餐或晚餐</small>
+                </span>
+              </label>
+              <label class="timing-mode-option">
+                <input type="radio" name="timingMode" value="interval" />
+                <span class="timing-mode-control">
+                  <strong>跟随上次服药</strong>
+                  <small>保持同一种药相邻剂次的原定间隔</small>
+                </span>
+              </label>
+            </div>
+            <details class="timing-mode-advanced" id="timingModeAdvanced" hidden>
+              <summary>高级设置</summary>
+              <label class="form-field adaptive-limit-field">
+                <span>单次自动调整上限</span>
+                <span class="adaptive-limit-control">
+                  <input
+                    type="number"
+                    name="maxAutoShiftMinutes"
+                    min="1"
+                    max="240"
+                    step="1"
+                    value="120"
+                    inputmode="numeric"
+                    aria-describedby="adaptiveLimitDescription"
+                    aria-errormessage="medicationDialogErrorMessage"
+                    required
+                  />
+                  <span>分钟</span>
+                </span>
+                <small id="adaptiveLimitDescription">单次偏差超过此范围时，只记录服药，不自动重排后续时间。</small>
+              </label>
+            </details>
+          </fieldset>
+
+          <section class="schedule-editor" aria-labelledby="scheduleEditorTitle">
+            <div class="schedule-editor-heading">
+              <div>
+                <p class="section-kicker">按实际服用时间填写</p>
+                <h3 id="scheduleEditorTitle">每日服用安排</h3>
+              </div>
+              <output id="scheduleEditorFrequency" aria-live="polite">1 次/日</output>
+            </div>
+            <ol class="schedule-editor-list" id="scheduleEditorList"></ol>
+            <button class="secondary-button add-schedule-button" id="addScheduleButton" type="button">
+              <span aria-hidden="true">＋</span> 添加服用时间
+            </button>
+          </section>
+
+          <button class="danger-button archive-medication-button" id="archiveMedicationButton" type="button" hidden>停用该药物</button>
+        </div>
+        <div
+          class="dialog-inline-error medication-dialog-error"
+          id="medicationDialogError"
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          tabindex="-1"
+          hidden
+        >
+          <span id="medicationDialogErrorMessage"></span>
+          <button class="text-button medication-reload-button" id="reloadMedicationButton" type="button" hidden>
+            载入最新安排
+          </button>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelMedicationButton" type="button">取消</button>
+          <button class="primary-button" type="submit">保存用药</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog
+      class="medication-dialog cross-day-dialog"
+      id="crossDayDialog"
+      aria-labelledby="crossDayDialogTitle"
+      aria-describedby="crossDayDialogDescription"
+    >
+      <form method="dialog" id="crossDayForm">
+        <div class="dialog-heading cross-day-dialog-heading">
+          <div>
+            <p class="section-kicker">日期边界确认</p>
+            <h2 id="crossDayDialogTitle">确认跨日安排</h2>
+          </div>
+        </div>
+        <p class="cross-day-dialog-description" id="crossDayDialogDescription"></p>
+        <p class="cross-day-reason" id="crossDayReason"></p>
+        <div class="cross-day-impact-list" id="crossDayImpactList"></div>
+        <p class="cross-day-preserved-note" id="crossDayPreservedNote"></p>
+        <p class="dialog-inline-error" id="crossDayDialogError" role="alert" hidden></p>
+        <div class="dialog-actions cross-day-dialog-actions">
+          <button class="secondary-button" id="cancelCrossDayButton" type="button">返回调整</button>
+          <span class="dialog-spacer"></span>
+          <button class="primary-button" id="confirmCrossDayButton" type="button">确认并保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <div class="error-banner" id="errorBanner" role="alert" hidden>
+      <span id="errorMessage">无法连接服务</span>
+      <button type="button" id="retryButton">重试</button>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
