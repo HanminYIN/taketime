@@ -1,8 +1,13 @@
-# 药时 TakeTime
+<p align="center">
+  <img src="public/assets/taketime-readme-banner.svg" alt="药时 TakeTime — 服药有时，养正无恙" width="100%" />
+</p>
 
-> 服药有时，养正无恙
-
-[在线互动演示](https://hanminyin.github.io/taketime/) · [产品边界](PRODUCT.md) · [部署指南](DEPLOYMENT.md) · [更新记录](CHANGELOG.md)
+<p align="center">
+  <a href="https://hanminyin.github.io/taketime/">在线互动演示</a> ·
+  <a href="PRODUCT.md">产品边界</a> ·
+  <a href="DEPLOYMENT.md">部署指南</a> ·
+  <a href="CHANGELOG.md">更新记录</a>
+</p>
 
 TakeTime 是一个单用户、自托管的每日用药记录工具。它把当天的真实作息、用餐时间和实际服药签到结合起来，持续给出下一项待办，而不是只展示一张固定钟点表。
 

@@ -75,6 +75,7 @@ REQUIRED_FILES = {
     "public/assets/pill-organizer-1400.avif",
     "public/assets/pill-organizer-1400.jpg",
     "public/assets/taketime-mark.svg",
+    "public/assets/taketime-readme-banner.svg",
     "public/assets/taketime-slogan-serif.woff2",
     "scripts/create_fresh_database.py",
     "scripts/verify_fresh_database.py",

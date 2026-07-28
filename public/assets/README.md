@@ -24,6 +24,14 @@ schedule.
 - Typeface behavior: uses the viewer's installed Chinese Kai-style font, with a generic serif fallback
 - External assets: none
 
+## taketime-readme-banner.svg
+
+- Purpose: GitHub README brand banner
+- Source: project-authored SVG
+- Visual language: solid near-black field, light Kai-style “药” seal, restrained serif slogan
+- Typeface behavior: uses the viewer's installed Chinese Kai/Song-style fonts with generic fallbacks
+- External assets: none
+
 ## taketime-slogan-serif.woff2
 
 - Purpose: navigation slogan “服药有时，养正无恙”
