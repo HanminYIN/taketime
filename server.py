@@ -2666,7 +2666,17 @@ class MedicationHandler(SimpleHTTPRequestHandler):
             self.send_error(HTTPStatus.NOT_FOUND)
             return
 
-        stat = candidate.stat()
+        # Keep the metadata and response body tied to the same open file.  A static
+        # asset can be replaced by a deploy while a request is in flight; calling
+        # stat() and read_bytes() separately can otherwise advertise the old size
+        # and send the new contents, leaving HTTP clients waiting for bytes that
+        # will never arrive (or treating trailing bytes as another response).
+        static_file = candidate.open("rb")
+        try:
+            body = static_file.read() if send_body else None
+            stat = os.fstat(static_file.fileno())
+        finally:
+            static_file.close()
         etag = f'W/"{stat.st_mtime_ns:x}-{stat.st_size:x}"'
         last_modified = formatdate(stat.st_mtime, usegmt=True)
         entry_gate_enabled = (
@@ -2708,7 +2718,8 @@ class MedicationHandler(SimpleHTTPRequestHandler):
         content_type, _ = mimetypes.guess_type(candidate.name)
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", content_type or "application/octet-stream")
-        self.send_header("Content-Length", str(stat.st_size))
+        content_length = len(body) if body is not None else stat.st_size
+        self.send_header("Content-Length", str(content_length))
         self.send_header("Cache-Control", cache_control)
         self.send_header("ETag", etag)
         self.send_header("Last-Modified", last_modified)
@@ -2716,7 +2727,7 @@ class MedicationHandler(SimpleHTTPRequestHandler):
             self.send_header("Vary", "Cookie")
         self.end_headers()
         if send_body:
-            self.wfile.write(candidate.read_bytes())
+            self.wfile.write(body)
 
 
 def create_server(

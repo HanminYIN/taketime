@@ -436,6 +436,29 @@ class MedicationServerTest(unittest.TestCase):
         self.assertEqual(error.exception.read(), b"")
         error.exception.close()
 
+    def test_static_response_stays_consistent_when_asset_is_replaced(self):
+        asset = Path(self.server.RequestHandlerClass.public_dir) / "app.js"
+        replacement = asset.with_name("replacement.js")
+        replacement.write_bytes(b"a much longer replacement asset")
+        original_open = Path.open
+        replaced = threading.Event()
+
+        def open_then_replace(path, *args, **kwargs):
+            opened = original_open(path, *args, **kwargs)
+            if path == asset and not replaced.is_set():
+                replacement.replace(asset)
+                replaced.set()
+            return opened
+
+        with patch.object(Path, "open", open_then_replace):
+            with urlopen(self.base_url + "/app.js", timeout=3) as response:
+                body = response.read()
+                self.assertEqual(body, b"console.log('tracker')")
+                self.assertEqual(int(response.headers["Content-Length"]), len(body))
+
+        self.assertTrue(replaced.is_set())
+        asset.write_bytes(b"console.log('tracker')")
+
         api_head_request = Request(self.base_url + "/api/health", method="HEAD")
         with self.assertRaises(HTTPError) as error:
             urlopen(api_head_request, timeout=3)
